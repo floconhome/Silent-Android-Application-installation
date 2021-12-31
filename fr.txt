@@ -1,0 +1,10 @@
+STR_NO_DATA_LOCAL_TMP='- /data/local/tmp non détecté: fin du script'
+STR_NO_AAPT='- aapt non détecté: copie en cours: '
+STR_NO_BUSYBOX="- busybox non détecté: merci de l'installer. Fin du script."
+STR_COUNT_TOTAL_APK='- app(s) à installer:'
+STR_APP_ALREADY_INSTALLED='déjà installée et à jour: app ignorée'
+STR_ERROR_DURING_COPY='ERREUR lors de la copie: app ignorée'
+STR_ERROR_DURING_INSTALLATION="ERREUR lors de l'installation: app ignorée"
+STR_ERROR_DURING_CLEANING='- ERREUR lors du nettoyage des fichiers temporaires'
+STR_ERROR_DURING_CLEANING_WHAT_TO_DO='merci de suppimer manuellement le dossier'
+STR_GOODBYE="- Tâches terminées ! Profitez bien !\n  A bientôt sur forum.floconhome.fr !\n  Bye ;)"

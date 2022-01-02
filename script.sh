@@ -1,5 +1,12 @@
 #!/system/bin/sh
 
+#todo
+#- pm / cmd
+#- data local tmp
+#- split apk
+#- doc
+#- versioning: 1.0.0
+
 bb=/system/bin/busybox
 awk="$bb awk"
 cat="$bb cat"

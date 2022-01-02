@@ -6,6 +6,7 @@
 #- split apk
 #- doc
 #- versioning: 1.0.0
+#- busybox or toybox ?
 
 bb=/system/bin/busybox
 awk="$bb awk"

@@ -1,5 +1,5 @@
 #!/system/bin/sh
-
+coucou
 bb=/system/bin/busybox
 awk="$bb awk"
 cat="$bb cat"

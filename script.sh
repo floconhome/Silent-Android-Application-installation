@@ -9,6 +9,7 @@
 #- busybox or toybox ?
 #- aapt 64 et 33 ?
 #- app already install: up to date ? no ?
+#- coucou
 
 bb=/system/bin/busybox
 awk="$bb awk"

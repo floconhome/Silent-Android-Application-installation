@@ -7,6 +7,8 @@
 #- doc
 #- versioning: 1.0.0
 #- busybox or toybox ?
+#- aapt 64 et 33 ?
+#- app already install: up to date ? no ?
 
 bb=/system/bin/busybox
 awk="$bb awk"

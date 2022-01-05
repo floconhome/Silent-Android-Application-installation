@@ -1,37 +1,18 @@
 #!/system/bin/sh
 
-#todo
-#- pm / cmd
-#- data local tmp
-#- split apk
-#- doc
-#- versioning: 1.0.0
-#- busybox or toybox ?
-#- aapt 64 et 33 ?
-#- app already install: up to date ? no ?
-#- coucou
+aapt=/data/local/tmp/asi/aapt-arm-32
 
-bb=/system/bin/busybox
-awk="$bb awk"
-cat="$bb cat"
-chmod="$bb chmod"
-cp="$bb cp"
-cut="$bb cut"
-date="$bb date"
-find="$bb find"
-grep="$bb grep"
-mkdir="$bb mkdir"
-rev="$bb rev"
-rm="$bb rm"
-rmdir="$bb rmdir"
-sed="$bb sed"
-sort="$bb sort"
-wc="$bb wc"
+# todo
+# copier aapt32
+# verifier /data/local/tmp
+# stocker la sortie texte du commit + code erreur
+# OK | si le write esr KO, alors supprioer la session ouis oasser a l'app suivante: non, la gestion du commit s'en occupera
+# OK | si la sessionid est vide alors passer à l'app suivabte
 
 function try {
   for i in 1 2 3
   do
-    "$@" &>/dev/null
+    "$@" #&>/dev/null
     rc=$?
     [ "$rc" = "0" ] && break
   done
@@ -42,75 +23,71 @@ function try {
 locale=$(getprop persist.sys.locale)
 lang=${locale:0:2}
 [ ! "$lang" = "fr" -a ! "$lang" = "en" ] && lang=en
-source ./$lang.txt
-# end
+source res/$lang.txt
 
-# verify prerequities
-if [ ! -d /data/local/tmp ]
-then
-  echo "$STR_NO_DATA_LOCAL_TMP"
-  exit
-fi
-tmpDir="/data/local/tmp/$(date +%s)"
-mkdir $tmpDir
-cp -f aapt $tmpDir/aapt &>/dev/null
-chmod a+x $tmpDir/aapt &>/dev/null
-aapt=$tmpDir/aapt
-if [ -z "$($bb)" ]
-then
-  echo "$STR_NO_BUSYBOX"
-  exit
-fi
-# end
+INSTALL_SUCCESS=0
+INSTALL_FAILED_VERSION_DOWNGRADE=4
+INSTALL_FAILED_ALREADY_EXISTS=5
+INSTALL_FAILED_BAD_WRITE=255
 
-cd apk
-countTotalAPK=$($find . -iname "*.apk" | $wc -l)
-echo "$STR_COUNT_TOTAL_APK $countTotalAPK"
+start=$(date +%s)
+
+countAllApps=$(find apps -mindepth 1 -type d | wc -l)
+echo "$STR_COUNT_TOTAL_APK $countAllApps"
 count=1
-for apk in *.apk
+
+find apps -mindepth 1 -type d -print0 | while read -r -d '' appFolder
 do
-  tmp=$($aapt d badging "$apk")
-  # extract info
-  label=$(echo "$tmp" | $grep -i "application-label-$locale:")
-  [ -z "$label" ] && label=$(echo "$tmp" | $grep -i "application-label-$lang:")
-  [ -z "$label" ] && label=$(echo "$tmp" | $grep -i "application-label:")
-  label=$(echo $label | $cut -d: -f2 | $sed "s/'//g")
-  versionName=$(echo $tmp | $grep -i versionname | $cut -d= -f4 | $cut -d\' -f2)
-  versionCodeFromApk=$(echo $tmp | $grep -i versioncode | $cut -d= -f3 | $cut -d\' -f2)
-  packageName=$(echo $tmp | $grep -i "package: name" | $cut -d= -f2 | $cut -d\' -f2)
-  versionCodeFromSystem=$(pm list package --show-versioncode $packageName | $cut -d: -f3)
-  echo -n "- [$count/$countTotalAPK] $label v$versionName: "
-  # app already installed and up to date ?
-  if [ ! -z "$versionCodeFromSystem" ]
+  # get application label
+  find "$appFolder" \( -iname "*.apk" -a ! -iname "split_*.apk" \) -print0 | while read -r -d '' apk
+  do
+    tmp=$($aapt d badging "$apk")
+    label=$(echo "$tmp" | grep -i "application-label-$locale:")
+    [ -z "$label" ] && label=$(echo "$tmp" | grep -i "application-label-$lang:")
+    [ -z "$label" ] && label=$(echo "$tmp" | grep -i "application-label:")
+    label=$(echo $label | cut -d: -f2 | sed "s/'//g")
+    versionName=$(echo $tmp | grep -i versionname | cut -d= -f4 | cut -d\' -f2)
+    echo "$count/$countAllApps: $label v$versionName"
+    break
+  done
+  # install apps
+  echo "preparing... "
+  session_id=$(cmd package install-create -R | grep -Eo "[0-9]+")
+  if [ -z "$session_id" ]
   then
-    if [ "$versionCodeFromApk" -lt "$versionCodeFromSystem" ]
-    then
-      echo "$STR_APP_ALREADY_INSTALLED"
-       (( count = count + 1 ))
-       continue
-    fi
-  fi
-  # install process
-  cpRes=$(try $cp -f "$apk" $tmpDir/app.apk)
-  if [ ! "$cpRes" = "0:1" ]; then
-    echo "$STR_ERROR_DURING_COPY (E$cpRes)"
-    (( count = count + 1 ))
+    echo session id void: next app
+   (( count += 1 ))
     continue
   fi
-  pmRes=$(try pm install "$tmpDir/app.apk")
-  if [ ! "$pmRes" = "0:1" ]; then
-    echo "$STR_ERROR_DURING_INSTALLATION (E$pmRes)"
-    (( count = count + 1 ))
-    continue
+ find "$appFolder" -iname "*.apk" -print0 | while read -r -d '' apk
+  do
+    target=/data/local/tmp/asi/$(basename "$apk" | sha256sum -b).apk
+    #echo $target
+    try cp -f "$apk" $target
+    cmd package install-write $session_id $(basename $target) $target #>/dev/null
+    #cmd package install-write $session_id poil /poul >/dev/null
+    rm -f $target
+  done
+  echo "committing... "
+  cmd package install-commit $session_id #>/dev/null
+  rc=$?
+  echo rc commit=$rc
+  if [ $rc -eq $INSTALL_SUCCESS ]
+  then
+    echo "OK"
+  elif [ $rc -eq $INSTALL_FAILED_VERSION_DOWNGRADE ]
+  then
+    echo "downgrade or invalide apk no pkg staged !!"
+  elif [ $rc -eq $INSTALL_FAILED_ALREADY_EXISTS ]
+  then
+    echo "exists ;)"
+  else
+    echo unknown
   fi
-  echo "OK"
-  (( count = count + 1 ))
+  #cmd package install-abandon $session_id
+  (( count += 1 ))
+  echo
 done
 
-# remove stuff
-rmRes=$(try $rm -rf $tmpDir)
-if [ ! "$rmRes" = "0:1" ]
-then
-  echo "$STR_ERROR_DURING_CLEANING (E$rmRes), $STR_ERROR_DURING_CLEANING_WHAT_TO_DO $tmpDir"
-fi
-echo "$STR_GOODBYE"
+duration=$(( $(date +%s) - start ))
+echo duration: ${duration}s

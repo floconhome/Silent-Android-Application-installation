@@ -1,4 +1,14 @@
-**How to use**
+**What is it for ?**
+
+
+**How to use ?**
+
+**Prerequities**
+
+**Example of use**
+
+**What does this message means ?**
+
 >1. extract zip in a folder in your external sd card
 >1. backup your applications in the **apps** script folder: each applications must have its folder
 >2. run a terminal application like termius

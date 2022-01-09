@@ -34,5 +34,5 @@ sh script.sh
    
 Once installation is completed for an application, a status message is displayed: if installation is successfull, a "SUCCESS" message will be displayed; else, message will contain a root cause:
 - `Failure [INSTALL_FAILED_ALREADY_EXISTS: Attempt to re-install {package name} without first uninstalling.]`: the version application is already installed; example: app v1.0.8 is already installed and you try to install the same version of the application
-- `Failure [INSTALL_FAILED_INVALID_APK: No packages staged]`: 
+- `Failure [INSTALL_FAILED_INVALID_APK: No packages staged]`: an error occured during installation
 - `Failure [INSTALL_FAILED_VERSION_DOWNGRADE]`: the version application is older than one installed; it is not possible to do this, the script goal is to install application not already installed or at leat upgrade one already installed

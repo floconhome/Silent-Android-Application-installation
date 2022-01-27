@@ -10,7 +10,7 @@ Batch application installation with no final user intervention.
    
 ## **How to use ?**
 1. extract zip
-1. put your applications backup in the apps folder, following exactly one folder by application, without any subfloder, just to hold application apk(s)
+1. put your applications backup in the apps folder, following exactly one folder by application, without any subfolder, just to hold application apk(s)
 1. run your terminal application, get root privileges, `cd` to the script folder
 1. run script by typing `sh script.sh`
    
